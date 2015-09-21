@@ -2,7 +2,7 @@
 
 # Use single quotes instead of double quotes to make it work with special-character passwords
 PASSWORD='12345678'
-PROJECTFOLDER='magento'
+PROJECTFOLDER='project'
 
 # ip address last octet of ip address. ipv6, who knew ye?
 read IP CN < <(exec ifconfig en0 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); print $2, t }')
@@ -85,5 +85,11 @@ echo "Adjusting locales";
 # locales
 sudo locale-gen es_ES.UTF-8 && sudo dpkg-reconfigure locales
 
-echo "<?php\nphpinfo()" > info.php
+PHPINFO=$(cat <<EOF
+<?php
+phpinfo();
+EOF
+)
 
+# nice php info, to have something in place
+echo "${PHPINFO}" > info.php
