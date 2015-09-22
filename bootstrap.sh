@@ -50,6 +50,9 @@ sudo echo "${VHOST}" > /etc/apache2/sites-available/000-default.conf
 # enable mod_rewrite
 sudo a2enmod rewrite
 
+# enable php5-mcrypt
+sudo php5enmod mcrypt
+
 # hoboman runs apache
 sudo perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
 
