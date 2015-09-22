@@ -89,7 +89,7 @@ echo ">>> downloading and installing composer"
 curl -s https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 
-echo "Installing wp-cli"
+echo ">>> installing wp-cli"
 # install wp-cli
 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 sudo mv wp-cli.phar /usr/local/bin/wp
@@ -106,5 +106,6 @@ EOF
 )
 
 # nice php info, to have something in place
-echo "${PHPINFO}" > /var/www/${PROJECT_FOLDER}/info.php
+echo "${PHPINFO}" > "/var/www/$PROJECT_FOLDER/info.php"
+sudo chown www-data:www-data "/var/www/$PROJECT_FOLDER/info.php" 
 
