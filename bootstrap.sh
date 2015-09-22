@@ -78,6 +78,9 @@ EOF
 
 sudo echo "${XDEBUG_INI}" > /etc/php5/mods-available/xdebug.ini
 
+echo ">>> restarting apache"
+sudo service apache2 restart
+
 # install git
 sudo apt-get -y install git subversion
 
@@ -103,4 +106,5 @@ EOF
 )
 
 # nice php info, to have something in place
-echo "${PHPINFO}" > info.php
+echo "${PHPINFO}" > /var/www/${PROJECT_FOLDER}/info.php
+
