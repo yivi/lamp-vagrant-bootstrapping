@@ -11,19 +11,26 @@ read IP CN < <(exec ifconfig en0 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); p
 # sudo mkdir "/var/www/${PROJECTFOLDER}"
 
 # update / upgrade
-sudo apt-get update && sudo -y apt-get upgrade
+sudo apt-get update && sudo apt-get upgrade
 
 # install apache 2.5 and php 5.5
+echo ">>> installing apache"
 sudo apt-get install -y apache2
+
+echo ">>> installing"
 sudo apt-get install -y php5
 
-sudo apt-get install -y mc php5-curl php5-mcrypt mysql-server php5-xdebug
-
 # install mysql and give password to installer
+echo ">> configuring and install mysql"
 sudo debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
 sudo debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
 sudo apt-get -y install mysql-server
-sudo apt-get install php5-mysql
+
+echo ">>> installing php extensions"
+sudo apt-get install -y php5-curl php5-mcrypt mysql-server php5-xdebug
+echo ">>> and php-mysql"
+sudo apt-get install -y php5-mysql
+
 
 # install phpmyadmin and give password(s) to installer
 # for simplicity I'm using the same password for mysql and phpmyadmin
@@ -75,6 +82,7 @@ sudo echo "${XDEBUG_INI}" > /etc/php5/mods-available/xdebug.ini
 sudo apt-get -y install git subversion
 
 # install Composer
+echo ">>> downloading and installing composer"
 curl -s https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 
@@ -84,7 +92,7 @@ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.pha
 sudo mv wp-cli.phar /usr/local/bin/wp
 echo "WP-CLI installed"
 
-echo "Adjusting locales";
+echo ">>> adjusting locales";
 # locales
 sudo locale-gen es_ES.UTF-8 && sudo dpkg-reconfigure locales
 
