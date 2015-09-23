@@ -91,9 +91,10 @@ sudo mv composer.phar /usr/local/bin/composer
 
 echo ">>> installing wp-cli"
 # install wp-cli
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 sudo mv wp-cli.phar /usr/local/bin/wp
-echo "WP-CLI installed"
+sudo chmod 755 /usr/local/bin/wp
+echo ">>> WP-CLI installed"
 
 echo ">>> adjusting locales";
 # locales
