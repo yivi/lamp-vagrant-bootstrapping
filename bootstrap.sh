@@ -64,7 +64,7 @@ sudo php5enmod mcrypt
 sudo perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
 
 # no servername complaining
-sudo perl -pi -e 's/(#ServerRoot "/etc/apache2")/\1\nServerName local.vagrant' /etc/apache2/apache2.conf
+sudo perl -pi -e 's/(#ServerRoot "\/etc\/apache2")/\1\nServerName local.vagrant/' /etc/apache2/apache2.conf
 
 XDEBUG_INI=$(cat <<EOF
 zend_extension=xdebug.so
