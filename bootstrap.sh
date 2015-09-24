@@ -17,6 +17,12 @@ apt-get update && apt-get upgrade
 echo ">>> installing apache"
 apt-get install -y apache2
 
+# hoboman runs apache
+perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
+
+# no servername complaining, svp
+perl -pi -e 's/(#ServerRoot "\/etc\/apache2")/\1\nServerName localhost/' /etc/apache2/apache2.conf
+
 echo ">>> installing"
 apt-get install -y php5
 
@@ -26,10 +32,14 @@ debconf-set-selections <<< "mysql-server mysql-server/root_password password $PA
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
 apt-get -y install mysql-server
 
+echo "CREATE DATABASE IF NOT EXISTS ${PROJECTFOLDER}" | mysql -u root -p$PASSWORD
+
 echo ">>> installing php extensions"
-apt-get install -y php5-curl php5-mcrypt mysql-server php5-xdebug
+apt-get install -y php5-curl php5-mcrypt php5-xdebug php5-gd
 echo ">>> and php-mysql"
-sudo apt-get install -y php5-mysql
+apt-get install -y php5-mysql
+
+
 
 # install phpmyadmin and give password(s) to installer
 # for simplicity I'm using the same password for mysql and phpmyadmin
@@ -58,12 +68,6 @@ sudo a2enmod rewrite
 
 # enable php5-mcrypt
 sudo php5enmod mcrypt
-
-# hoboman runs apache
-perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
-
-# no servername complaining
-perl -pi -e 's/(#ServerRoot "\/etc\/apache2")/\1\nServerName localhost/' /etc/apache2/apache2.conf
 
 XDEBUG_INI=$(cat <<EOF
 zend_extension=xdebug.so
