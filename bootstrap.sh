@@ -39,17 +39,6 @@ apt-get install -y php5-curl php5-mcrypt php5-xdebug php5-gd
 echo ">>> and php-mysql"
 apt-get install -y php5-mysql
 
-
-
-# install phpmyadmin and give password(s) to installer
-# for simplicity I'm using the same password for mysql and phpmyadmin
-# sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
-# sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $PASSWORD"
-# sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/admin-pass password $PASSWORD"
-# sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $PASSWORD"
-# sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
-# sudo apt-get -y install phpmyadmin
-
 # setup hosts file
 VHOST=$(cat <<EOF
 <VirtualHost *:80>
@@ -102,6 +91,9 @@ echo ">>> WP-CLI installed"
 echo ">>> adjusting locales";
 # locales
 locale-gen es_ES.UTF-8 && dpkg-reconfigure locales
+
+echo "Europe/Madrid" | sudo tee /etc/timezone
+dpkg-reconfigure --frontend noninteractive tzdata
 
 PHPINFO=$(cat <<EOF
 <?php
