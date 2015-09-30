@@ -5,7 +5,7 @@ PASSWORD='12345678'
 PROJECTFOLDER='project'
 
 # ip address last octet of ip address. ipv6, who knew ye?
-read IP CN < <(exec ifconfig en0 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); print $2, t }')
+read IP CN < <(exec ifconfig eth1 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); print $2, t }')
 
 # create project folder (only necessary if we are not syncing yet, so maybe not?)
 # sudo mkdir "/var/www/${PROJECTFOLDER}"
