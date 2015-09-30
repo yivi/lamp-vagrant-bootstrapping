@@ -64,7 +64,7 @@ xdebug.remote_host=33.33.33.1
 xdebug.remote_enable=on
 html_errors=1
 xdebug.extended_info=1
-xdebug.remote_port=9$CN
+xdebug.remote_port=9{$CN}
 EOF
 )
 
