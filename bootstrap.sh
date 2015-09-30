@@ -10,6 +10,9 @@ read IP CN < <(exec ifconfig eth1 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); 
 # create project folder (only necessary if we are not syncing yet, so maybe not?)
 # sudo mkdir "/var/www/${PROJECTFOLDER}"
 
+# better hostname
+echo $PROJECTFOLDER > /etc/hostname
+
 # update / upgrade
 apt-get update && apt-get upgrade
 
