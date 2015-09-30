@@ -30,7 +30,7 @@ apt-get install -y php5
 echo ">> configuring and install mysql"
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
-apt-get -y install mysql-server
+apt-get -y install mysql-server-5.6
 
 echo "CREATE DATABASE IF NOT EXISTS ${PROJECTFOLDER}" | mysql -u root -p$PASSWORD
 
