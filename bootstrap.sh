@@ -60,8 +60,9 @@ sudo php5enmod mcrypt
 
 XDEBUG_INI=$(cat <<EOF
 zend_extension=xdebug.so
-xdebug.remote_host=33.33.33.1
+xdebug.remote_host=192.168.33.1
 xdebug.remote_enable=on
+xdebug.autostart=1
 html_errors=1
 xdebug.extended_info=1
 xdebug.remote_port=9$CN
