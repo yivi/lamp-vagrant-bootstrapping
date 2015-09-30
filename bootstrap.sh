@@ -83,7 +83,7 @@ mv composer.phar /usr/local/bin/composer
 
 echo ">>> installing wp-cli"
 # install wp-cli
-wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 chmod 755 /usr/local/bin/wp
 echo ">>> WP-CLI installed"
