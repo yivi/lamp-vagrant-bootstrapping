@@ -3,6 +3,7 @@
 # Use single quotes instead of double quotes to make it work with special-character passwords
 PASSWORD='12345678'
 PROJECTFOLDER='project'
+HTTPD='APACHE' # OR 'NGINX'
 
 # ip address last octet of ip address. ipv6, who knew ye?
 read IP CN < <(exec ifconfig eth1 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); print $2, t }')
@@ -13,50 +14,131 @@ read IP CN < <(exec ifconfig eth1 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); 
 # better hostname
 echo $PROJECTFOLDER | tee /etc/hostname
 
+export DEBIAN_FRONTEND=noninteractive
+
+echo ">>> adjusting locales";
+# locales
+locale-gen es_ES.UTF-8
+export LANGUAGE=es_ES.UTF-8
+export LANG=es_ES.UTF-8
+export LC_ALL=es_ES.UTF-8
+dpkg-reconfigure locales
+
 # update / upgrade
 apt-get update && apt-get upgrade
 
-# install apache 2.5 and php 5.5
-echo ">>> installing apache"
-apt-get install -y apache2
+echo "Europe/Madrid" | sudo tee /etc/timezone
+dpkg-reconfigure --frontend noninteractive tzdata
 
-# hoboman runs apache
-perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
+if [ $HTTPD = 'APACHE' ]; then
+	# install apache 2.5
+	echo ">>> installing apache"
+	apt-get install -y apache2
 
-# no servername complaining, svp
-perl -pi -e 's/(#ServerRoot "\/etc\/apache2")/\1\nServerName localhost/' /etc/apache2/apache2.conf
+	# hoboman runs apache
+	perl -pi -e 's/(APACHE_RUN_(USER|GROUP))=www-data/\1=vagrant/g' /etc/apache2/envvars
 
-echo ">>> installing"
-apt-get install -y php5
+	# no servername complaining, svp
+	perl -pi -e 's/(#ServerRoot "\/etc\/apache2")/\1\nServerName localhost/' /etc/apache2/apache2.conf
+
+	# setup hosts file
+	VHOST=$(cat <<EOF
+	<VirtualHost *:80>
+	    DocumentRoot "/var/www/${PROJECTFOLDER}"
+	    <Directory "/var/www/${PROJECTFOLDER}">
+	        AllowOverride All
+	        Require all granted
+	    </Directory>
+	</VirtualHost>
+EOF
+	)
+	echo "${VHOST}" > /etc/apache2/sites-available/000-default.conf
+
+	# enable mod_rewrite
+	sudo a2enmod rewrite
+
+	echo ">>> restarting apache"
+	service apache2 restart
+
+elif [ $HTTPD = 'NGINX' ]; then
+	#statements
+	echo ">>> installing nginx"
+	apt-get install -y nginx
+
+	# hoboman runs nginx
+	perl -pi -e 's/(user) www-data/\1 vagrant/' /etc/nginx/nginx.conf
+
+
+	VHOST=$(cat <<EOF
+server {
+        listen  80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+
+        root /var/www/${PROJECTFOLDER};
+        index index.php index.html index.htm;
+
+        location / {
+                try_files \$uri \$uri/ /index.html;
+        }
+
+        error_page 404 /404.html;
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+              root /usr/share/nginx/www;
+        }
+
+        # pass the PHP scripts to FastCGI server listening on the php-fpm socket
+        location ~ \.php$ {
+                try_files \$uri =404;
+                fastcgi_pass unix:/var/run/php5-fpm.sock;
+                fastcgi_index index.php;
+                fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+                include fastcgi_params;
+
+        }
+
+}
+EOF
+	)
+
+    echo "${VHOST}" > /etc/nginx/sites-available/default
+
+    service nginx restart
+
+fi
 
 # install mysql and give password to installer
 echo ">> configuring and install mysql"
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
+
 apt-get -y install mysql-server-5.6
 
 echo "CREATE DATABASE IF NOT EXISTS ${PROJECTFOLDER}" | mysql -u root -p$PASSWORD
+
+if [ $HTTPD = 'APACHE' ]; then
+    echo ">>> installing PHP5 (apache)"
+    apt-get install -y php5
+fi
+
+if [ $HTTPD = 'NGINX' ]; then
+	echo ">>> installing php-fpm for nginx"
+	apt-get install -y  php5-fpm php5-cli
+
+	# fix cgi-fix so it stays fixed.
+	perl -pi -e 's/;?(cgi.fix_pathinfo)=(1|0)/\1=0/' /etc/php5/fpm/php.ini
+
+	# hoboman runs php as well
+	perl -pi -e 's/((listen\.)?user|group|owner) = www-data/\1 = vagrant/g' /etc/php5/fpm/pool.d/www.conf
+
+	service php5-fpm restart
+fi
 
 echo ">>> installing php extensions"
 apt-get install -y php5-curl php5-mcrypt php5-xdebug php5-gd
 echo ">>> and php-mysql"
 apt-get install -y php5-mysql
-
-# setup hosts file
-VHOST=$(cat <<EOF
-<VirtualHost *:80>
-    DocumentRoot "/var/www/${PROJECTFOLDER}"
-    <Directory "/var/www/${PROJECTFOLDER}">
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-EOF
-)
-echo "${VHOST}" > /etc/apache2/sites-available/000-default.conf
-
-# enable mod_rewrite
-sudo a2enmod rewrite
 
 # enable php5-mcrypt
 sudo php5enmod mcrypt
@@ -74,9 +156,6 @@ EOF
 
 echo "${XDEBUG_INI}" > /etc/php5/mods-available/xdebug.ini
 
-echo ">>> restarting apache"
-service apache2 restart
-
 # install git
 apt-get -y install git subversion
 
@@ -92,13 +171,6 @@ mv wp-cli.phar /usr/local/bin/wp
 chmod 755 /usr/local/bin/wp
 echo ">>> WP-CLI installed"
 
-echo ">>> adjusting locales";
-# locales
-locale-gen es_ES.UTF-8 && dpkg-reconfigure locales
-
-echo "Europe/Madrid" | sudo tee /etc/timezone
-dpkg-reconfigure --frontend noninteractive tzdata
-
 PHPINFO=$(cat <<EOF
 <?php
 phpinfo();
@@ -107,4 +179,4 @@ EOF
 
 # nice php info, to have something in place
 echo "${PHPINFO}" > "/var/www/$PROJECT_FOLDER/info.php"
-chown vagrant: "/var/www/$PROJECT_FOLDER/info.php" 
+chown vagrant: "/var/www/$PROJECT_FOLDER/info.php"
