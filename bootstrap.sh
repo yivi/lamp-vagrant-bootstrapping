@@ -78,7 +78,7 @@ server {
         index index.php index.html index.htm;
 
         location / {
-                try_files \$uri \$uri/ /index.html;
+                try_files $uri $uri/ /index.php$is_args$args;
         }
 
         error_page 404 /404.html;
