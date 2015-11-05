@@ -4,6 +4,7 @@
 PASSWORD='12345678'
 PROJECTFOLDER='project'
 HTTPD='APACHE' # OR 'NGINX'
+DB='MYSQL' # OR 'PXC'
 
 # ip address last octet of ip address. ipv6, who knew ye?
 read IP CN < <(exec ifconfig eth1 | awk '/inet / { t = $2; sub(/.*[.]/, "", t); print $2, t }')
@@ -27,7 +28,7 @@ dpkg-reconfigure locales
 # update / upgrade
 apt-get update && apt-get upgrade
 
-echo "Europe/Madrid" | sudo tee /etc/timezone
+echo "Europe/Madrid" | tee /etc/timezone
 dpkg-reconfigure --frontend noninteractive tzdata
 
 if [ $HTTPD = 'APACHE' ]; then
@@ -54,8 +55,8 @@ EOF
 	)
 	echo "${VHOST}" > /etc/apache2/sites-available/000-default.conf
 
-	# enable mod_rewrite
-	sudo a2enmod rewrite
+	# enable mod_rewrite, mod_expires, mod_headers
+	a2enmod rewrite expires headers
 
 	echo ">>> restarting apache"
 	service apache2 restart
@@ -67,7 +68,6 @@ elif [ $HTTPD = 'NGINX' ]; then
 
 	# hoboman runs nginx
 	perl -pi -e 's/(user) www-data/\1 vagrant/' /etc/nginx/nginx.conf
-
 
 	VHOST=$(cat <<EOF
 server {
@@ -95,25 +95,36 @@ server {
                 fastcgi_index index.php;
                 fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
                 include fastcgi_params;
-
         }
-
 }
 EOF
 	)
-
     echo "${VHOST}" > /etc/nginx/sites-available/default
 
     service nginx restart
-
 fi
 
-# install mysql and give password to installer
-echo ">> configuring and install mysql"
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
 
-apt-get -y install mysql-server-5.6
+if [ $DB = 'MYSQL' ]; then
+    # install mysql and give password to installer
+    echo ">> configuring and install mysql"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
+    apt-get -y install mysql-server-5.6
+fi
+
+if [ $DB = 'PXC' ]; then
+    # install percona xtradb cluster and give password to installer
+    echo ">> configuring and install percona xtradb cluster"
+    apt-key adv --keyserver keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
+    echo "deb http://repo.percona.com/apt "$(lsb_release -sc)" main" | tee /etc/apt/sources.list.d/percona.list
+    apt-get update
+
+    debconf-set-selections <<< "percona-xtradb-cluster-server-5.6 percona-xtradb-cluster-server/root_password password $PASSWORD"
+    debconf-set-selections <<< "percona-xtradb-cluster-server-5.6 percona-xtradb-cluster-server/root_password_again password $PASSWORD"
+
+    apt-get -y install percona-xtradb-cluster-56
+fi
 
 echo "CREATE DATABASE IF NOT EXISTS ${PROJECTFOLDER}" | mysql -u root -p$PASSWORD
 
@@ -141,7 +152,7 @@ echo ">>> and php-mysql"
 apt-get install -y php5-mysql
 
 # enable php5-mcrypt
-sudo php5enmod mcrypt
+php5enmod mcrypt
 
 XDEBUG_INI=$(cat <<EOF
 zend_extension=xdebug.so
