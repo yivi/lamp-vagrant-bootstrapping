@@ -188,7 +188,7 @@ phpinfo();
 EOF
 )
 
-ln -s /vagrant /var/www/$PROJECT_FOLDER
+service apache2 restart
 
 # nice php info, to have something in place
 echo "${PHPINFO}" > "/var/www/$PROJECT_FOLDER/info.php"
