@@ -177,7 +177,7 @@ mv composer.phar /usr/local/bin/composer
 
 echo ">>> installing wp-cli"
 # install wp-cli
-wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+curl -Os https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 chmod 755 /usr/local/bin/wp
 echo ">>> WP-CLI installed"
@@ -187,6 +187,8 @@ PHPINFO=$(cat <<EOF
 phpinfo();
 EOF
 )
+
+ln -s /vagrant /var/www/$PROJECT_FOLDER
 
 # nice php info, to have something in place
 echo "${PHPINFO}" > "/var/www/$PROJECT_FOLDER/info.php"
