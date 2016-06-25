@@ -29,8 +29,10 @@ echo "Europe/Madrid" | tee /etc/timezone
 dpkg-reconfigure --frontend noninteractive tzdata
 
 echo ">>> downloading adminer"
-mkdir -p /var/www/adminer & chown vagrant: /var/www/adminer
+mkdir -p /var/www/adminer && chown vagrant: /var/www/adminer
 wget --quiet http://www.adminer.org/latest.php -O /var/www/adminer/index.php
+
+mkdir -p /var/www/$PROJECTFOLDER
 
 if [ $HTTPD = 'APACHE' ]; then
 	# install apache 2.4
